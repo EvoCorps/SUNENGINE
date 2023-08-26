@@ -1,25 +1,18 @@
 
 #include <stdio.h>
 #include <direct.h>
-
-#include <glad/glad.h>
+#include "classes/mesh.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
-#include <GLFW/glfw3.h>
+/*we don't need to include all the things we were including
+    mesh.h already ahs a reference to those
+*/
 
+/* no ImGui for now, i removed it since i don't need it and i can't make it work
+* if you can make it work, please do it
 #include "../include/imgui/imgui.h"
 #include "../include/imgui/imgui_impl_opengl3.h"
-#include "../include/imgui/imgui_impl_sdl2.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "classes/Texture.h"
-#include "classes/shaderClass.h"
-#include "classes/VAO.h"
-#include "classes/VBO.h"
-#include "classes/EBO.h"
-#include "classes/camera.h"
+#include "../include/imgui/imgui_impl_sdl2.h"*/
 
 
 
@@ -37,39 +30,37 @@ const unsigned int height = 800;
 
     2- The second column is used to give a custom color to each vertex.
 
-    3- The third column is harder to explain, i use it to repeat textures
-       just know that if you change all the 1.0f to 2.0f, 
-       textures will repeat 2 times.
-
-    4- The fourth and final column is used for normals, wich is 
+    3- The third column is is used for normals, wich is 
        basically just some parameters for my light
 
+    4- The fourth and final column is used for the coordinates of the textures
+
 */
-GLfloat vertices[] =
+Vertex vertices[] =
 {
-    -1.0f, 0.0f,  1.0f,		0.0f, 0.0f, 0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-    -1.0f, 0.0f, -1.0f,		0.0f, 0.0f, 0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-     1.0f, 0.0f, -1.0f,		0.0f, 0.0f, 0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-     1.0f, 0.0f,  1.0f,		0.0f, 0.0f, 0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f
+    Vertex{glm::vec3(-1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)},
+    Vertex{glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)},
+    Vertex{glm::vec3(1.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)},
+    Vertex{glm::vec3(1.0f, 0.0f,  1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)}
 };
 
-
+// indices for vertices order
 GLuint indices[] =
 {
     0, 1, 2,
     0, 2, 3
 };
 
-GLfloat lightVertices[] =
+Vertex lightVertices[] =
 {
-    -0.1f, -0.1f,  0.1f,
-    -0.1f, -0.1f, -0.1f,
-     0.1f, -0.1f, -0.1f,
-     0.1f, -0.1f,  0.1f,
-    -0.1f,  0.1f,  0.1f,
-    -0.1f,  0.1f, -0.1f,
-     0.1f,  0.1f, -0.1f,
-     0.1f,  0.1f,  0.1f
+    Vertex{glm::vec3(-0.1f, -0.1f,  0.1f)},
+    Vertex{glm::vec3(-0.1f, -0.1f, -0.1f)},
+    Vertex{glm::vec3(0.1f, -0.1f, -0.1f)},
+    Vertex{glm::vec3(0.1f, -0.1f,  0.1f)},
+    Vertex{glm::vec3(-0.1f,  0.1f,  0.1f)},
+    Vertex{glm::vec3(-0.1f,  0.1f, -0.1f)},
+    Vertex{glm::vec3(0.1f,  0.1f, -0.1f)},
+    Vertex{glm::vec3(0.1f,  0.1f,  0.1f)}
 };
 
 GLuint lightIndices[] =
@@ -135,91 +126,60 @@ int main(int argc, char* argv[]) {
         SDL_Log("GLAD initialized correctly!");
     }
 
-    /*IMGUI IMPLEMENTATION*/
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui_ImplSDL2_InitForOpenGL(window, glContext);
-    ImGui_ImplOpenGL3_Init("#version 460 core");
-
-
-
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
     printf("Renderer: %s\n", glGetString(GL_RENDERER));
 
 
+    Texture textures[]
+    {
+        Texture("assets/planks_mat.png", "diffuse", 0, GL_RGBA, GL_UNSIGNED_BYTE),
+        Texture("assets/planks_spc.png", "specular", 1, GL_RED, GL_UNSIGNED_BYTE)
+    };
+
 
     Shader shaderProgram("shaders/default.vts", "shaders/default.fgs");
+    // store mesh data in vectors for the mesh
+    std::vector <Vertex> verts(vertices, vertices + sizeof(vertices) / sizeof(Vertex));
+    std::vector <GLuint> ind(indices, indices + sizeof(indices) / sizeof(GLuint));
+    std::vector <Texture> tex(textures, textures + sizeof(textures) / sizeof(Texture));
+    // create floor mesh
+    Mesh floor(verts, ind, tex);
 
 
-
-
-    VAO VAO1;
-    VAO1.Bind();
-    VBO VBO1(vertices, sizeof(vertices));
-    EBO EBO1(indices, sizeof(indices));
-
-
-    VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 11 * sizeof(float), (void*)0);
-    VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-    VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-    VAO1.LinkAttrib(VBO1, 3, 3, GL_FLOAT, 11 * sizeof(float), (void*)(8 * sizeof(float)));
-    VAO1.Unbind();
-    VBO1.Unbind();
-    EBO1.Unbind();
+    // shader for light cube
     Shader lightShader("shaders/light.vts", "shaders/light.fgs");
+    // store mesh data in vectors for the mesh
+    std::vector <Vertex> lightVerts(lightVertices, lightVertices + sizeof(lightVertices) / sizeof(Vertex));
+    std::vector <GLuint> lightInd(lightIndices, lightIndices + sizeof(lightIndices) / sizeof(GLuint));
+    // create light mesh
+    Mesh light(lightVerts, lightInd, tex);
 
-    VAO lightVAO;
-    lightVAO.Bind();
-    VBO lightVBO(lightVertices, sizeof(lightVertices));
-    EBO lightEBO(lightIndices, sizeof(lightIndices));
-
-    lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
-    lightVAO.Unbind();
-    lightVBO.Unbind();
-    lightEBO.Unbind();
 
     glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
     glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
     glm::mat4 lightModel = glm::mat4(1.0f);
     lightModel = glm::translate(lightModel, lightPos);
 
-    glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-    glm::mat4 pyramidModel = glm::mat4(1.0f);
-    pyramidModel = glm::translate(pyramidModel, pyramidPos);
+    glm::vec3 objectPos = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::mat4 objectModel = glm::mat4(1.0f);
+    objectModel = glm::translate(objectModel, objectPos);
+
 
     lightShader.Activate();
     glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
     glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
     shaderProgram.Activate();
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(objectModel));
     glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
     glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 
-
-    Texture material("assets/planks_mat.png", GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE);
-    material.texUnit(shaderProgram, "tex0", 0);
-    Texture materialSpec("assets/planks_spc.png", GL_TEXTURE_2D, 1, GL_RED, GL_UNSIGNED_BYTE);
-    materialSpec.texUnit(shaderProgram, "tex1", 1);
-
-
-    // Create the camera
+    // create the camera
     Camera camera(width, height, glm::vec3(0.0f, 0.0f, 2.0f));
 
     bool quit = false;
 
     glEnable(GL_DEPTH_TEST);
-
-
-
-
-
-
-
-
-
-
-
 
     while (!quit) {
         SDL_Event event;
@@ -228,41 +188,11 @@ int main(int argc, char* argv[]) {
                 quit = true;
             }
             else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                // Update the viewport and projection matrix
+                // update the viewport and projection matrix
                 glViewport(0, 0, event.window.data1, event.window.data2);
                 camera.UpdateAspectRatio(event.window.data1, event.window.data2);
             }
-
-            /* move light object, to "move" the light in the shader, used to test spotlights*/
-            else if (event.type == SDL_KEYDOWN) {
-                float cameraSpeed = 0.1f;
-                switch (event.key.keysym.sym) {
-                case SDLK_UP:
-                    lightPos.z += cameraSpeed;
-                    break;
-                case SDLK_DOWN:
-                    lightPos.z -= cameraSpeed;
-                    break;
-                case SDLK_LEFT:
-                    lightPos.x -= cameraSpeed;
-                    break;
-                case SDLK_RIGHT:
-                    lightPos.x += cameraSpeed;
-                    break;
-                case SDLK_q:
-                    lightPos.y += cameraSpeed;
-                    break;
-                case SDLK_e:
-                    lightPos.y -= cameraSpeed;
-                    break;
-                }
-
-            }
         }
-
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
 
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -270,58 +200,18 @@ int main(int argc, char* argv[]) {
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-        /*update the ligh shader every frame*/
-        shaderProgram.Activate();
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
-        glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+        floor.Draw(shaderProgram, camera);
+        light.Draw(lightShader, camera);
 
-
-        glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-        camera.Matrix(shaderProgram, "camMatrix");
-
-
-        material.Bind();
-        materialSpec.Bind();
-        VAO1.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, 0);
-
-
-        lightShader.Activate();
-        glm::mat4 lightModel = glm::mat4(1.0f);
-        lightModel = glm::translate(lightModel, lightPos);
-        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-        camera.Matrix(lightShader, "camMatrix");
-
-        lightVAO.Bind();
-        glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
-
-
-        // ImGUI window creation
-        ImGui::Begin("My name is window, ImGUI window");
-        // Ends the window
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         SDL_GL_SwapWindow(window);
 
         SDL_Delay(16);
     }
 
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
 
-
-    VAO1.Delete();
-    VBO1.Delete();
-    EBO1.Delete();
     shaderProgram.Delete();
-    material.Unbind();
-    materialSpec.Unbind();
-
+    lightShader.Delete();
     SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();

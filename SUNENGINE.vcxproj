@@ -149,6 +149,7 @@
     <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\classes\camera.cpp" />
     <ClCompile Include="src\classes\EBO.cpp" />
+    <ClCompile Include="src\classes\mesh.cpp" />
     <ClCompile Include="src\classes\shaderClass.cpp" />
     <ClCompile Include="src\classes\Texture.cpp" />
     <ClCompile Include="src\classes\VAO.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="include\stb\stb_image.h" />
     <ClInclude Include="src\classes\camera.h" />
     <ClInclude Include="src\classes\EBO.h" />
+    <ClInclude Include="src\classes\mesh.h" />
     <ClInclude Include="src\classes\shaderClass.h" />
     <ClInclude Include="src\classes\Texture.h" />
     <ClInclude Include="src\classes\VAO.h" />
