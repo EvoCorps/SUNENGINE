@@ -138,6 +138,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\imgui\imgui.cpp" />
+    <ClCompile Include="include\imgui\imgui_demo.cpp" />
+    <ClCompile Include="include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="include\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="include\imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="include\imgui\imgui_impl_sdl2.cpp" />
+    <ClCompile Include="include\imgui\imgui_impl_sdlrenderer2.cpp" />
+    <ClCompile Include="include\imgui\imgui_tables.cpp" />
+    <ClCompile Include="include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\classes\camera.cpp" />
     <ClCompile Include="src\classes\EBO.cpp" />
     <ClCompile Include="src\classes\shaderClass.cpp" />
@@ -149,6 +158,18 @@
     <ClCompile Include="src\stb.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\imgui\imconfig.h" />
+    <ClInclude Include="include\imgui\imgui.h" />
+    <ClInclude Include="include\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="include\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="include\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="include\imgui\imgui_impl_sdl2.h" />
+    <ClInclude Include="include\imgui\imgui_impl_sdl3.h" />
+    <ClInclude Include="include\imgui\imgui_impl_sdlrenderer2.h" />
+    <ClInclude Include="include\imgui\imgui_internal.h" />
+    <ClInclude Include="include\imgui\imstb_rectpack.h" />
+    <ClInclude Include="include\imgui\imstb_textedit.h" />
+    <ClInclude Include="include\imgui\imstb_truetype.h" />
     <ClInclude Include="include\stb\stb_image.h" />
     <ClInclude Include="src\classes\camera.h" />
     <ClInclude Include="src\classes\EBO.h" />

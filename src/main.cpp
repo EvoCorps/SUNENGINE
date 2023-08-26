@@ -1,10 +1,16 @@
 
+#include <stdio.h>
+#include <direct.h>
+
 #include <glad/glad.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include <GLFW/glfw3.h>
-#include <stdio.h>
-#include <direct.h>
+
+#include "../include/imgui/imgui.h"
+#include "../include/imgui/imgui_impl_opengl3.h"
+#include "../include/imgui/imgui_impl_sdl2.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -14,6 +20,7 @@
 #include "classes/VBO.h"
 #include "classes/EBO.h"
 #include "classes/camera.h"
+
 
 
 
@@ -128,6 +135,12 @@ int main(int argc, char* argv[]) {
         SDL_Log("GLAD initialized correctly!");
     }
 
+    /*IMGUI IMPLEMENTATION*/
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui_ImplSDL2_InitForOpenGL(window, glContext);
+    ImGui_ImplOpenGL3_Init("#version 460 core");
+
 
 
     printf("OpenGL Version: %s\n", glGetString(GL_VERSION));
@@ -197,6 +210,17 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
+
+
+
+
+
+
+
+
+
+
+
     while (!quit) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -236,6 +260,10 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -268,10 +296,24 @@ int main(int argc, char* argv[]) {
         lightVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+
+        // ImGUI window creation
+        ImGui::Begin("My name is window, ImGUI window");
+        // Ends the window
+        ImGui::End();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         SDL_GL_SwapWindow(window);
 
         SDL_Delay(16);
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+
 
     VAO1.Delete();
     VBO1.Delete();
