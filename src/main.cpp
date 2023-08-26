@@ -135,7 +135,7 @@ int main(int argc, char* argv[]) {
 
 
 
-    Shader shaderProgram("shaders/default.vert", "shaders/default.frag");
+    Shader shaderProgram("shaders/default.vts", "shaders/default.fgs");
 
 
 
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]) {
     VAO1.Unbind();
     VBO1.Unbind();
     EBO1.Unbind();
-    Shader lightShader("shaders/light.vert", "shaders/light.frag");
+    Shader lightShader("shaders/light.vts", "shaders/light.fgs");
 
     VAO lightVAO;
     lightVAO.Bind();
@@ -208,6 +208,32 @@ int main(int argc, char* argv[]) {
                 glViewport(0, 0, event.window.data1, event.window.data2);
                 camera.UpdateAspectRatio(event.window.data1, event.window.data2);
             }
+
+            /* move light object, to "move" the light in the shader, used to test spotlights*/
+            else if (event.type == SDL_KEYDOWN) {
+                float cameraSpeed = 0.1f;
+                switch (event.key.keysym.sym) {
+                case SDLK_UP:
+                    lightPos.z += cameraSpeed;
+                    break;
+                case SDLK_DOWN:
+                    lightPos.z -= cameraSpeed;
+                    break;
+                case SDLK_LEFT:
+                    lightPos.x -= cameraSpeed;
+                    break;
+                case SDLK_RIGHT:
+                    lightPos.x += cameraSpeed;
+                    break;
+                case SDLK_q:
+                    lightPos.y += cameraSpeed;
+                    break;
+                case SDLK_e:
+                    lightPos.y -= cameraSpeed;
+                    break;
+                }
+
+            }
         }
 
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
@@ -216,8 +242,13 @@ int main(int argc, char* argv[]) {
         camera.Inputs(window);
         camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-
+        /*update the ligh shader every frame*/
         shaderProgram.Activate();
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+        glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+        glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
+
+
         glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
         camera.Matrix(shaderProgram, "camMatrix");
 
@@ -229,10 +260,13 @@ int main(int argc, char* argv[]) {
 
 
         lightShader.Activate();
+        glm::mat4 lightModel = glm::mat4(1.0f);
+        lightModel = glm::translate(lightModel, lightPos);
+        glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
         camera.Matrix(lightShader, "camMatrix");
+
         lightVAO.Bind();
         glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
-
 
         SDL_GL_SwapWindow(window);
 

@@ -67,10 +67,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\default.frag" />
-    <None Include="shaders\default.vert" />
-    <None Include="shaders\light.frag" />
-    <None Include="shaders\light.vert" />
+    <None Include="shaders\default.fgs" />
+    <None Include="shaders\default.vts" />
+    <None Include="shaders\light.fgs" />
+    <None Include="shaders\light.vts" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\texture_test.png">
